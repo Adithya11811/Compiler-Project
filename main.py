@@ -480,11 +480,11 @@ rules = [
     
 ]
 
-# nonterm_userdef = ['S','T','M','B','D','A','E','F','G','W','P','Q','R','X','C']
+nonterm_userdef = ['S','statement_list','statement','declaration','type','ID_list','assignment','expression','loop','ID','LIT','NUM','REAL_DIG']
 
-# # # List of terminals in our grammar
-# term_userdef = [id,arr1,arr2,arr3,'n','int','main()','End','for','if','begin','do','i','to',
-#                 '(',')','+','-','endif','endfor','return','>','=','1',',',';']
+# # List of terminals in our grammar
+term_userdef = [token_dict['BEGIN'][0],token_dict['END'][0],token_dict['PRINT'][0],token_dict['INTEGER'][0],token_dict['REAL'][0],token_dict['STRING'][0],token_dict['EQUAL'][0],token_dict['FOR'][0],token_dict['TO'][0],',',token_dict['IDENTIFIER'][0],token_dict['IDENTIFIER'][1],token_dict['IDENTIFIER'][2],token_dict['IDENTIFIER'][3],token_dict['IDENTIFIER'][4],token_dict['IDENTIFIER'][5],token_dict['IDENTIFIER'][6],token_dict['IDENTIFIER'][7],token_dict['STRING_VALUE'][0],token_dict['STRING_VALUE'][1],token_dict['STRING_VALUE'][2],token_dict['STRING_VALUE'][3],token_dict['INTEGER_VALUE'][0],token_dict['INTEGER_VALUE'][1],token_dict['INTEGER_VALUE'][2],token_dict['INTEGER_VALUE'][3],token_dict['INTEGER_VALUE'][4],token_dict['REAL_VALUE'][0],token_dict['REAL_VALUE'][1]]
+
 diction = {}
 firsts = {}
 follows = {}
