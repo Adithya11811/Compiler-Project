@@ -2,7 +2,7 @@ import re
 
 # Token types
 tokens = [
-    'PRINT', 'INTEGER', 'REAL', 'STRING', 'EQUAL','END','BEGIN','KEYWORD'
+    'PRINT', 'INTEGER', 'REAL', 'STRING', 'EQUAL','END','BEGIN','KEYWORD',
     'IDENTIFIER', 'INTEGER_VALUE', 'REAL_VALUE', 'STRING_VALUE',
     'FOR', 'TO', 'COLON', 'SEMICOLON', 'LEFT_BRACKET',
     'RIGHT_BRACKET', 'COMMA'
@@ -53,10 +53,10 @@ class Lexer:
                 pattern = r','
             elif token == 'IDENTIFIER':
                 pattern = r'[A-Za-z][A-Za-z0-9_]*'
-            elif token == 'REAL_VALUE':
-                pattern = r'[-+]?[0-9]*\.[0-9]+([eE][-+]?[0-9]+)?'
             elif token == 'INTEGER_VALUE':
-                pattern = r'\d+'
+                pattern = r'-?[0-9]+(\.[0-9]+)?'
+            elif token == 'REAL_VALUE':
+                pattern = r'-?[0-9]*\.?[0-9]+([eE][+]?[0-9]+)?'
             elif token == 'STRING_VALUE':
                 pattern = r'\"([^\\\n]|(\\.))*?\"'
 
@@ -123,4 +123,21 @@ for token_type, token_value in tokens:
 
 # print(token_dict)
 
-print(token_dict['BEGIN'][0])
+print(token_dict)
+
+rules = [
+    "S -> "+token_dict['BEGIN'][0]+" statement_list "+token_dict['END'][0]+" ",
+    "statement_list -> statement_list statement | statement",
+    "statement -> declaration | assignment | token_dict['PRINT'][0] LIT | loop",
+    "declaration -> type ID_list",
+    "type -> "+token_dict['INTEGER'][0]+" | "+token_dict['REAL'][0]+" | "+token_dict['STRING'][0]+"",
+    "ID_list -> ID_list "+token_dict['COMMA'][0]+" ID | ID",
+    "assignment -> ID "+token_dict['EQUAL'][0]+" expression",
+    "expression ->  IDENTIFIER | NUM | LIT",
+    "loop -> "+token_dict['FOR'][0]+" ID "+token_dict['EQUAL'][0]+" NUM "+token_dict['TO'][0]+" NUM  statement",
+    "ID -> "+token_dict['IDENTIFIER'][0]+" | "+token_dict['IDENTIFIER'][1]+" |"+token_dict['IDENTIFIER'][2]+" |"+token_dict['IDENTIFIER'][3]+" |"+token_dict['IDENTIFIER'][4]+" |"+token_dict['IDENTIFIER'][5]+" |"+token_dict['IDENTIFIER'][6]+" |"+token_dict['IDENTIFIER'][7]+" |"+token_dict['IDENTIFIER'][8]+" |"+token_dict['IDENTIFIER'][9]+" |"+token_dict['IDENTIFIER'][10]+" |"+token_dict['IDENTIFIER'][11]+" |"+token_dict['IDENTIFIER'][12]+" |"+token_dict['IDENTIFIER'][13]+" |"+token_dict['IDENTIFIER'][14]+" |"+token_dict['IDENTIFIER'][15]+" |"+token_dict['IDENTIFIER'][16]+" ",
+    "LIT -> "+token_dict['STRING_VALUE'][0]+" | "+token_dict['STRING_VALUE'][1]+" | "+token_dict['STRING_VALUE'][2]+" | "+token_dict['STRING_VALUE'][3]+" ",
+    "NUM -> "+token_dict['INTEGER_VALUE'][0]+" | "+token_dict['INTEGER_VALUE'][1]+"| "+token_dict['INTEGER_VALUE'][2]+" | "+token_dict['INTEGER_VALUE'][3]+" ",
+    "REAL" -> "+token_dict['REAL_VALUE'][0]+" | "+token_dict['REAL_VALUE'][1]+" | ",
+    
+]
