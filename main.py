@@ -494,4 +494,3 @@ print(start_symbol)
 computeAllFollows()
 (parsing_table, result, tabTerm) = createParseTable()
 # if code != None:
-
