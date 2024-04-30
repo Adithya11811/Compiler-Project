@@ -1,6 +1,6 @@
 # Compiler-Project
 
-# TECH USED: "PYTHON"
+TECH USED: "PYTHON"
 
 The following is the language we are trying to generate tokens and parse 
 
