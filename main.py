@@ -99,10 +99,28 @@ lexer.input(lexer_input)
 # Tokenize
 while True:
     lexer.token()
-    lexer.pos+=1;
+    lexer.pos += 1
     if lexer.pos >= len(lexer_input):
         break
 
 # print(lexer.get_tokens())
 for token in lexer.get_tokens():
     print(token)
+
+print(code)
+
+tokens = lexer.get_tokens()
+
+#hege acess madudu helthirudu
+print(tokens[0][1])
+
+token_dict = {}
+for token_type, token_value in tokens:
+    if token_type in token_dict:
+        token_dict[token_type].append(token_value)
+    else:
+        token_dict[token_type] = [token_value]
+
+# print(token_dict)
+
+print(token_dict['BEGIN'][0])
