@@ -78,6 +78,7 @@ class Lexer:
         return self.tokens
 
 def removeLeftRecursion (rulesDiction):
+    print("rulesDiction: ",rulesDiction)
     store = {}
     for lhs in rulesDiction:
         # alphaRules will store the rules with left recursion.
@@ -115,6 +116,7 @@ def removeLeftRecursion (rulesDiction):
 
 def LeftFactoring(rulesDiction):
     # This dictionary will store the left-factored grammar rules.
+    print("enchi saav")
     newDict = {}
     for lhs in rulesDiction:
         # Group right-hand sides (rhs) based on the first terminal/non-terminal in each:
@@ -152,6 +154,7 @@ def LeftFactoring(rulesDiction):
 
 
 def first(rule):
+    # print("rule: ",rule)
     global rules,nonterm_userdef,\
         term_userdef,diction,firsts
     if len(rule) != 0 and (rule is not None):
@@ -161,6 +164,8 @@ def first(rule):
             return '#'
     # If the first symbol is a non-terminal, recursively calculate the FIRST set for the corresponding 
     #right-hand side rules in the grammar.
+
+    
     if len(rule) != 0:
             if rule[0] in list(diction.keys()):
                 fres = []
@@ -201,6 +206,7 @@ def follow(nt):
     term_userdef, diction, firsts, follows
     # The solset set will store the symbols in the FOLLOW set for the given non-terminal.
     solset = set()
+    # print("nt: ",nt)
     # Handling the Start Symbol:
     if nt == start_symbol:
         solset.add('$')
@@ -209,13 +215,19 @@ def follow(nt):
         rhs = diction[curNT]
         for subrule in rhs:
             # Finding the Occurrences of the Target Non-terminal in a Rule:
+            print("curNT: ",curNT,"subrule: ",subrule)
+
             if nt in subrule:
+
                 while nt in subrule:
                     index_nt = subrule.index(nt)
                     subrule = subrule[index_nt + 1:]
+
                     # Handling Symbols Following the Target Non-terminal:
                     if len(subrule) != 0:
-                        res = first(subrule)
+                        # print("subrule: ",subrule,"res: ",firsts.get(subrule[0]))
+                        res = list(firsts.get(subrule[0]))
+                        # print("res: ",res)
 
                     # Handling Epsilon Transitions in FIRST set
                         if '#' in res:
@@ -243,6 +255,7 @@ def follow(nt):
     return list(solset)
 
 def computeAllFirsts():
+    print("aloo ")
     global rules, nonterm_userdef, \
         term_userdef, diction, firsts
     for rule in rules:
@@ -266,6 +279,7 @@ def computeAllFirsts():
     # Remove left recursion
     diction = removeLeftRecursion (diction)
     # Remove left factoring
+    print("balo")
     diction = LeftFactoring (diction)
     for y in list(diction.keys()):
         t = set()
@@ -279,20 +293,23 @@ def computeAllFirsts():
                     t.add(res)
         firsts[y] = t
 
-    print("================================================================================================")
-    print("\nCalculated firsts: ")
-    key_list = list(firsts.keys())
-    index = 0
-    for gg in firsts:
-        print(f"first({key_list [index]}) "f"=> {firsts.get(gg)}")
-        index += 1
+    # print("================================================================================================")
+    # print("\nCalculated firsts: ")
+    # key_list = list(firsts.keys())
+    # index = 0
+    # for gg in firsts:
+    #     print(f"first({key_list[index]}) "f"=> {firsts.get(gg)}")
+    #     index += 1
+
+    
 
 def computeAllFollows():
     global start_symbol, rules, nonterm_userdef, \
         term_userdef, diction, firsts, follows
     for NT in diction:
         solset = set()
-        sol = follow (NT)
+        # print("NT dfghj: ",NT)
+        sol = follow(NT)
         if sol is not None:
             for g in sol:
                 solset.add(g)
@@ -461,9 +478,7 @@ for token_type, token_value in tokens:
 # print(token_dict['BEGIN'][0])
 
 
-# print(token_dict['BEGIN'][0])
-
-rules = [
+rules1 = [
     "S -> "+token_dict['BEGIN'][0]+" statement_list "+token_dict['END'][0]+" ",
     "statement_list -> statement_list statement | statement",
     "statement -> declaration | assignment | "+token_dict['PRINT'][0]+" LIT | loop",
@@ -471,7 +486,7 @@ rules = [
     "type -> "+token_dict['INTEGER'][0]+" | "+token_dict['REAL'][0]+" | "+token_dict['STRING'][0]+"",
     "ID_list -> ID_list , ID | ID",
     "assignment -> ID "+token_dict['EQUAL'][0]+" expression",
-    "expression ->  IDENTIFIER | NUM | REAL_DIG | LIT",
+    "expression ->  ID | NUM | REAL_DIG | LIT",
     "loop -> "+token_dict['FOR'][0]+" ID "+token_dict['EQUAL'][0]+" NUM "+token_dict['TO'][0]+" NUM  statement",
     "ID -> "+token_dict['IDENTIFIER'][0]+" | "+token_dict['IDENTIFIER'][1]+" |"+token_dict['IDENTIFIER'][2]+" |"+token_dict['IDENTIFIER'][3]+" |"+token_dict['IDENTIFIER'][4]+" |"+token_dict['IDENTIFIER'][5]+" |"+token_dict['IDENTIFIER'][6]+" |"+token_dict['IDENTIFIER'][7]+"  ",
     "LIT -> "+token_dict['STRING_VALUE'][0]+" | "+token_dict['STRING_VALUE'][1]+" | "+token_dict['STRING_VALUE'][2]+" | "+token_dict['STRING_VALUE'][3]+" ",
@@ -480,10 +495,77 @@ rules = [
     
 ]
 
-nonterm_userdef = ['S','statement_list','statement','declaration','type','ID_list','assignment','expression','loop','ID','LIT','NUM','REAL_DIG']
+rules3 = [
+    "S -> BEGIN statement_list END ",
+    "statement_List -> statement st_li",
+    "st_li -> statement st_li | # ",
+    "statement -> declaration | assignment | PRINT LIT | loop",
+    "declaration -> type ID_list",
+    "type -> INTEGER | REAL | STRING",
+    "ID_List -> ID idli",
+    "idli -> , ID idli | #",
+    "assignment -> ID := expression",
+    "expression ->  ID | NUM | REAL_DIG | LIT",
+    "loop -> FOR ID := NUM TO  NUM  statement",
+    "ID -> A | B | C  | D | E | X | Y | I ",
+    "LIT -> HELLO | text1 | hello there | Strings are [X] and [Y] ",
+    "NUM -> 2 | 4 | 6 | 1 | 5 ",
+    "REAL_DIG -> -3.65E-8 | 4.567 ",
+    
+]
+
+rules = [
+    "S -> BEGIN statement_list END",
+    "statement_List -> statement st_li",
+    "st_li -> statement st_li",
+    "st_li -> #",
+    "statement -> declaration",
+    "statement -> assignment",
+    "statement -> PRINT LIT",
+    "statement -> loop",
+    "declaration -> type ID_List",
+    "type -> INTEGER",
+    "type -> REAL",
+    "type -> STRING",
+    "ID_List -> ID idli",
+    "idli -> , ID idli",
+    "idli -> #",
+    "assignment -> ID := expression",
+    "expression -> ID",
+    "expression -> NUM",
+    "expression -> REAL_DIG",
+    "expression -> LIT",
+    "loop -> FOR ID := NUM TO NUM statement",
+    "ID -> A",
+    "ID -> B",
+    "ID -> C",
+    "ID -> D",
+    "ID -> E",
+    "ID -> X",
+    "ID -> Y",
+    "ID -> I",
+    "LIT -> HELLO",
+    "LIT -> text1",
+    "LIT -> hello there",
+    "LIT -> Strings are [X] and [Y]",
+    "NUM -> 2",
+    "NUM -> 4",
+    "NUM -> 6",
+    "NUM -> 1",
+    "NUM -> 5",
+    "REAL_DIG -> -3.65E-8",
+    "REAL_DIG -> 4.567"
+]
+
+
+
+
+print(token_dict)
+nonterm_userdef = ['S','statement_list','statement','declaration','type','ID_list','assignment','expression','loop','ID','LIT','NUM','REAL_DIG','st_li','idli']
+term_userdef = ['BEGIN','END','PRINT','2','4','6','1','5','-3.65E-8','4.567',':=','FOR','TO','A' ,'B' ,'C' , 'D', 'E' ,'X' ,'Y' ,'I','HELLO' , 'text1' , 'hello there', 'Strings are [X] and [Y]',"#", "INTEGER", "REAL", "STRING","," ]
 
 # # List of terminals in our grammar
-term_userdef = [token_dict['BEGIN'][0],token_dict['END'][0],token_dict['PRINT'][0],token_dict['INTEGER'][0],token_dict['REAL'][0],token_dict['STRING'][0],token_dict['EQUAL'][0],token_dict['FOR'][0],token_dict['TO'][0],',',token_dict['IDENTIFIER'][0],token_dict['IDENTIFIER'][1],token_dict['IDENTIFIER'][2],token_dict['IDENTIFIER'][3],token_dict['IDENTIFIER'][4],token_dict['IDENTIFIER'][5],token_dict['IDENTIFIER'][6],token_dict['IDENTIFIER'][7],token_dict['STRING_VALUE'][0],token_dict['STRING_VALUE'][1],token_dict['STRING_VALUE'][2],token_dict['STRING_VALUE'][3],token_dict['INTEGER_VALUE'][0],token_dict['INTEGER_VALUE'][1],token_dict['INTEGER_VALUE'][2],token_dict['INTEGER_VALUE'][3],token_dict['INTEGER_VALUE'][4],token_dict['REAL_VALUE'][0],token_dict['REAL_VALUE'][1]]
+# term_userdef = [token_dict['BEGIN'][0],token_dict['END'][0],token_dict['PRINT'][0],token_dict['INTEGER'][0],token_dict['REAL'][0],token_dict['STRING'][0],token_dict['EQUAL'][0],token_dict['FOR'][0],token_dict['TO'][0],',',token_dict['IDENTIFIER'][0],token_dict['IDENTIFIER'][1],token_dict['IDENTIFIER'][2],token_dict['IDENTIFIER'][3],token_dict['IDENTIFIER'][4],token_dict['IDENTIFIER'][5],token_dict['IDENTIFIER'][6],token_dict['IDENTIFIER'][7],token_dict['STRING_VALUE'][0],token_dict['STRING_VALUE'][1],token_dict['STRING_VALUE'][2],token_dict['STRING_VALUE'][3],token_dict['INTEGER_VALUE'][0],token_dict['INTEGER_VALUE'][1],token_dict['INTEGER_VALUE'][2],token_dict['INTEGER_VALUE'][3],token_dict['INTEGER_VALUE'][4],token_dict['REAL_VALUE'][0],token_dict['REAL_VALUE'][1]]
 
 diction = {}
 firsts = {}
@@ -491,6 +573,15 @@ follows = {}
 computeAllFirsts()
 start_symbol = list(diction.keys())[0]
 print(start_symbol)
+print("================================================================================================")
+print("\nCalculated firsts: ")
+key_list = list(firsts.keys())
+index = 0
+for gg in firsts:
+    print(f"first({key_list[index]}) "f"=> {firsts.get(gg)}")
+    index += 1
+print("dictionary: ",diction)
 computeAllFollows()
-(parsing_table, result, tabTerm) = createParseTable()
+# (parsing_table, result, tabTerm) = createParseTable()
+
 # if code != None:
