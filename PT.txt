@@ -1,0 +1,3 @@
+Empty DataFrame
+Columns: [Stack, Input, Output]
+Index: []
