@@ -1,8 +1,6 @@
 import re
 import warnings
 from tabulate import tabulate
-import copy
-import sys
 import csv
 
 warnings.filterwarnings("ignore")
@@ -121,7 +119,6 @@ def removeLeftRecursion(rulesDiction):
 
 def LeftFactoring(rulesDiction):
     # This dictionary will store the left-factored grammar rules.
-    print("enchi saav")
     newDict = {}
     for lhs in rulesDiction:
         # Group right-hand sides (rhs) based on the first terminal/non-terminal in each:
@@ -157,8 +154,8 @@ def LeftFactoring(rulesDiction):
             newDict[key] = tempo_dict[key]
     return newDict
 
+
 def first(rule):
-    # print("rule: ",rule)
     global rules, nonterm_userdef, \
         term_userdef, diction, firsts
     if len(rule) != 0 and (rule is not None):
@@ -173,12 +170,11 @@ def first(rule):
         if rule[0] in list(diction.keys()):
             fres = []
             rhs_rules = diction[rule[0]]
-            # print("rhs_rules: ", rhs_rules)
             for itr in rhs_rules:
                 if [['HELLO'], ['text1'], ['hello', 'there'], ['Strings', 'are', '[X]', 'and', '[Y]']] == rhs_rules:
                     print("itr: ", itr)
                 indivRes = first(itr)
-                
+
                 if type(indivRes) is list:
                     for i in indivRes:
                         fres.append(i)
@@ -208,8 +204,8 @@ def first(rule):
                 fres.append('#')
                 return fres
 
+
 def computeAllFirsts():
-    # print("aloo ")
     global rules, nonterm_userdef, \
         term_userdef, diction, firsts
     for rule in rules:
@@ -225,15 +221,9 @@ def computeAllFirsts():
     print(f"\nRules: \n")
     for y in diction:
         print(f"{y}->{diction[y]}")
-    # Open a file named rules.txt in write mode
-    # with open('rules.txt', 'w') as file:
-    # file.write("Rules: \n")
-    # for y in diction:
-    # file.write(f"{y} -> {diction [y]}\n")
     # Remove left recursion
     diction = removeLeftRecursion(diction)
     # Remove left factoring
-    # print("balo")
     diction = LeftFactoring(diction)
     for y in list(diction.keys()):
         t = set()
@@ -246,14 +236,6 @@ def computeAllFirsts():
                 else:
                     t.add(res)
         firsts[y] = t
-
-    # print("================================================================================================")
-    # print("\nCalculated firsts: ")
-    # key_list = list(firsts.keys())
-    # index = 0
-    # for gg in firsts:
-    #     print(f"first({key_list[index]}) "f"=> {firsts.get(gg)}")
-    #     index += 1
 
 def createParseTable():
     import copy
@@ -285,7 +267,7 @@ def createParseTable():
                     first_rhs = [first_rhs]
                 for term in first_rhs:
 
-                    if term != '#' :
+                    if term != '#':
                         if parsing_table[lhs][term] == "":
                             parsing_table[lhs][term] += f"{lhs} -> {' '.join(rhs)}"
                         else:
@@ -294,7 +276,7 @@ def createParseTable():
                             else:
                                 grammar_is_LL = False
                                 parsing_table[lhs][term] = parsing_table[lhs][term] \
-                                    + f",{lhs}->{' '.join(rhs)}"
+                                                           + f",{lhs}->{' '.join(rhs)}"
                 if '#' in first_rhs:
 
                     for follow_symbol in follows[lhs]:
@@ -318,10 +300,9 @@ def createParseTable():
         writer.writerow(table_headers)
         writer.writerows(table_data)
 
-
     # Check if grammar is LL(1)
     print("\nIs the grammar LL(1)? ", grammar_is_LL)
-   
+
     return parsing_table, grammar_is_LL, term_userdef + ['$']
 
 
@@ -376,7 +357,7 @@ def validateStringUsingStackBuffer(parsing_table, grammarll1,
     stack = [start_symbol, '$']
     input_string = input_string.split()
     input_string.reverse()
-    buffer = ['$']+ input_string
+    buffer = ['$'] + input_string
 
     # Writing Header for Parsing Steps:
     print("{:>70} {:>10} {:>20}\n".format("Input\t\t\t\t\tt\t\t\t\t\t", "Stack\t\t", "Action"))
@@ -388,7 +369,7 @@ def validateStringUsingStackBuffer(parsing_table, grammarll1,
             print("{:>100} | {:>25} | {:>30}\n".format(' '.join(buffer), ' '.join(stack), "Valid"))
             return "Valid String!"
 
-        
+
         # Parsing Non-terminals:
         elif stack[0] not in term_userdef:
             non_terminal = stack[0]
@@ -405,7 +386,7 @@ def validateStringUsingStackBuffer(parsing_table, grammarll1,
                     return f"Invalid String! No rule at Table[{non_terminal}][{terminal}]."
             else:
                 return f"Invalid String! Non-terminal '{non_terminal}' or terminal '{terminal}' not found in parsing table."
-                
+
         # Matching Terminals:
         else:
             if stack[0] == buffer[-1]:
@@ -415,7 +396,6 @@ def validateStringUsingStackBuffer(parsing_table, grammarll1,
                 stack.pop(0)
             else:
                 return "Invalid String! Unmatched terminal symbols\n"
-
 
 
 # Test the lexer
@@ -449,16 +429,12 @@ while True:
     if lexer.pos >= len(lexer_input):
         break
 
-# print(lexer.get_tokens())
 for token in lexer.get_tokens():
     print(token)
 
 print(code)
 
 tokens = lexer.get_tokens()
-
-# hege acess madudu helthirudu
-# print(tokens[0][1])
 
 token_dict = {}
 for token_type, token_value in tokens:
@@ -467,13 +443,6 @@ for token_type, token_value in tokens:
             token_dict[token_type].append(token_value)
     else:
         token_dict[token_type] = [token_value]
-
-# print(token_dict)
-
-
-# print(token_dict['BEGIN'][0])
-
-
 
 
 rules = [
@@ -494,23 +463,18 @@ rules = [
     "REAL_DIG -> -3.65E-8 | 4.567 ",
 ]
 
-
-print(token_dict)
+# print(token_dict)
 nonterm_userdef = ['S', 'statement_list', 'statement', 'declaration', 'type', 'ID_List', 'assignment', 'expression',
                    'loop', 'ID', 'LIT', 'NUM', 'REAL_DIG', 'st_li', 'idli']
 term_userdef = ['BEGIN', 'END', 'PRINT', '2', '4', '6', '1', '5', '-3.65E-8', '4.567', ':=', 'FOR', 'TO', 'A', 'B', 'C',
-                'D', 'E', 'X', 'Y', 'I', '"HELLO"', '"text1"', '"hello_there"', '"Strings_are_[X]_and_[Y]"', "#", "INTEGER",
+                'D', 'E', 'X', 'Y', 'I', '"HELLO"', '"text1"', '"hello_there"', '"Strings_are_[X]_and_[Y]"', "#",
+                "INTEGER",
                 "REAL", "STRING", ","]
-
 
 diction = {}
 firsts = {}
 follows = {}
 computeAllFirsts()
-# start_symbol = list(diction.keys())[0]
-# print(start_symbol)
-print("================================================================================================")
-print(firsts)
 print("================================================================================================")
 print("\nCalculated firsts: ")
 key_list = list(firsts.keys())
@@ -518,24 +482,19 @@ index = 0
 for gg in firsts:
     print(f"first({key_list[index]}) "f"=> {firsts.get(gg)}")
     index += 1
-print("dictionary: ", diction)
 
-start_symbol = 'S'
-# computeAllFollows()
-# print(grammar == diction)
+
+start_symbol = list(diction.keys())[0]
 computeAllFollows()
 print("\n \n")
 print("================================================================================================")
-# print(grammar)
-# grammar = diction
 print("\n \n")
 (parsing_table, result, tabTerm) = createParseTable()
 
-
 if code != None:
-    validity = validateStringUsingStackBuffer(parsing_table,result,
-                             tabTerm,code,
-                             term_userdef,start_symbol)
+    validity = validateStringUsingStackBuffer(parsing_table, result,
+                                              tabTerm, code,
+                                              term_userdef, start_symbol)
     print(validity)
 else:
     print("No input String detected")
