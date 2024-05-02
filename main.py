@@ -173,8 +173,12 @@ def first(rule):
         if rule[0] in list(diction.keys()):
             fres = []
             rhs_rules = diction[rule[0]]
+            # print("rhs_rules: ", rhs_rules)
             for itr in rhs_rules:
+                if [['HELLO'], ['text1'], ['hello', 'there'], ['Strings', 'are', '[X]', 'and', '[Y]']] == rhs_rules:
+                    print("itr: ", itr)
                 indivRes = first(itr)
+                
                 if type(indivRes) is list:
                     for i in indivRes:
                         fres.append(i)
@@ -267,28 +271,41 @@ def createParseTable():
     for nt in nonterm_userdef:
         print(f"{nt:<10} {str(firsts[nt]):<{mx_len_first + 5}} {str(follows[nt]):<{mx_len_fol + 5}}")
 
+    grammar_is_LL = True
+
     # Initialize parsing table
     parsing_table = {nt: {t: '' for t in term_userdef + ['$']} for nt in nonterm_userdef}
 
     # Filling in the Parsing Table
     for lhs, rhs_list in diction.items():
         for rhs in rhs_list:
-
-            
             first_rhs = first(rhs)
             if first_rhs is not None:
                 if not isinstance(first_rhs, list):
                     first_rhs = [first_rhs]
                 for term in first_rhs:
 
-                    if term != '#':
-                        # print("lhs: ", lhs, "term: ", term, "rhs: ", rhs)
-                        parsing_table[lhs][term] = f"{lhs} -> {' '.join(rhs)}"
+                    if term != '#' :
+                        if parsing_table[lhs][term] == "":
+                            parsing_table[lhs][term] += f"{lhs} -> {' '.join(rhs)}"
+                        else:
+                            if f"{lhs}->{rhs}" in parsing_table[lhs][term]:
+                                continue
+                            else:
+                                grammar_is_LL = False
+                                parsing_table[lhs][term] = parsing_table[lhs][term] \
+                                    + f",{lhs}->{' '.join(rhs)}"
                 if '#' in first_rhs:
-                    print("lhs: ", lhs, "term: ", follow_symbol, "rhs: ", rhs)
 
                     for follow_symbol in follows[lhs]:
-                        parsing_table[lhs][follow_symbol] = f"{lhs} -> {' '.join(rhs)}"
+                        if parsing_table[lhs][follow_symbol] == '':
+                            parsing_table[lhs][follow_symbol] = f"{lhs} -> {' '.join(rhs)}"
+                        else:
+                            if f"{lhs}->{rhs}" in parsing_table[lhs][follow_symbol]:
+                                continue
+                            else:
+                                grammar_is_LL = False
+                                parsing_table[lhs][follow_symbol] += f"{lhs} -> {' '.join(rhs)}"
 
     # Print the generated parsing table
     table_headers = [''] + term_userdef + ['$']
@@ -303,8 +320,8 @@ def createParseTable():
 
 
     # Check if grammar is LL(1)
-    grammar_is_LL = all(parsing_table[nt][t] == '' for nt in nonterm_userdef for t in term_userdef + ['$'])
-
+    print("\nIs the grammar LL(1)? ", grammar_is_LL)
+   
     return parsing_table, grammar_is_LL, term_userdef + ['$']
 
 
@@ -404,14 +421,14 @@ INTEGER A, B, C
 REAL D, E 
 STRING X, Y 
 A := 2 
-B := 4 
+B := 5
 C := 6 
 D := -3.65E-8 
 E := 4.567 
 X := "text1" 
-Y := "hello there" 
+Y := "hello_there" 
 FOR I:=1 TO 5 
-PRINT "Strings are [X] and [Y]" 
+PRINT "Strings_are_[X]_and_[Y]" 
 END 
 """
 
@@ -452,28 +469,7 @@ for token_type, token_value in tokens:
 # print(token_dict['BEGIN'][0])
 
 
-rules1 = [
-    "S -> " + token_dict['BEGIN'][0] + " statement_list " + token_dict['END'][0] + " ",
-    "statement_list -> statement_list statement | statement",
-    "statement -> declaration | assignment | " + token_dict['PRINT'][0] + " LIT | loop",
-    "declaration -> type ID_list",
-    "type -> " + token_dict['INTEGER'][0] + " | " + token_dict['REAL'][0] + " | " + token_dict['STRING'][0] + "",
-    "ID_list -> ID_list , ID | ID",
-    "assignment -> ID " + token_dict['EQUAL'][0] + " expression",
-    "expression ->  ID | NUM | REAL_DIG | LIT",
-    "loop -> " + token_dict['FOR'][0] + " ID " + token_dict['EQUAL'][0] + " NUM " + token_dict['TO'][
-        0] + " NUM  statement",
-    "ID -> " + token_dict['IDENTIFIER'][0] + " | " + token_dict['IDENTIFIER'][1] + " |" + token_dict['IDENTIFIER'][
-        2] + " |" + token_dict['IDENTIFIER'][3] + " |" + token_dict['IDENTIFIER'][4] + " |" + token_dict['IDENTIFIER'][
-        5] + " |" + token_dict['IDENTIFIER'][6] + " |" + token_dict['IDENTIFIER'][7] + "  ",
-    "LIT -> " + token_dict['STRING_VALUE'][0] + " | " + token_dict['STRING_VALUE'][1] + " | " +
-    token_dict['STRING_VALUE'][2] + " | " + token_dict['STRING_VALUE'][3] + " ",
-    "NUM -> " + token_dict['INTEGER_VALUE'][0] + " | " + token_dict['INTEGER_VALUE'][1] + "| " +
-    token_dict['INTEGER_VALUE'][2] + " | " + token_dict['INTEGER_VALUE'][3] + " | " + token_dict['INTEGER_VALUE'][
-        4] + " ",
-    "REAL_DIG -> " + token_dict['REAL_VALUE'][0] + " | " + token_dict['REAL_VALUE'][1] + " ",
 
-]
 
 rules = [
     "S -> BEGIN statement_list END ",
@@ -488,7 +484,7 @@ rules = [
     "expression ->  ID | NUM | REAL_DIG | LIT",
     "loop -> FOR ID := NUM TO  NUM  statement",
     "ID -> A | B | C  | D | E | X | Y | I ",
-    "LIT -> HELLO | text1 | hello there | Strings are [X] and [Y] ",
+    "LIT -> HELLO | text1 |  hello_there | Strings_are_[X]_and_[Y] ",
     "NUM -> 2 | 4 | 6 | 1 | 5 ",
     "REAL_DIG -> -3.65E-8 | 4.567 ",
 ]
@@ -498,7 +494,7 @@ print(token_dict)
 nonterm_userdef = ['S', 'statement_list', 'statement', 'declaration', 'type', 'ID_List', 'assignment', 'expression',
                    'loop', 'ID', 'LIT', 'NUM', 'REAL_DIG', 'st_li', 'idli']
 term_userdef = ['BEGIN', 'END', 'PRINT', '2', '4', '6', '1', '5', '-3.65E-8', '4.567', ':=', 'FOR', 'TO', 'A', 'B', 'C',
-                'D', 'E', 'X', 'Y', 'I', 'HELLO', 'text1', 'hello there', 'Strings are [X] and [Y]', "#", "INTEGER",
+                'D', 'E', 'X', 'Y', 'I', 'HELLO', 'text1', 'hello_there', 'Strings_are_[X]_and_[Y]', "#", "INTEGER",
                 "REAL", "STRING", ","]
 
 
