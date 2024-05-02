@@ -1,3 +1,0 @@
-  ID_List  loop  statement  idli  st_li  expression  LIT  type  declaration  ID  REAL_DIG  statement_List  assignment  NUM  S 
-0                                                                                                                             
-1                                                                                                                             

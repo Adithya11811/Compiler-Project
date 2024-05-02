@@ -363,57 +363,6 @@ def follow(nT, visited):
                         follow_ |= follow(nt, visited)
     return follow_
 
-# def validateStringUsingStackBuffer(parsing_table, grammarll1,
-#                                    table_term_list, input_string,
-#                                    term_userdef, start_symbol):
-#     print(f"Validate String:\n\n{input_string}\n")
-#     print("Look into the parsing.txt file for the parsing steps")
-#     print("\n")
-#     if grammarll1 == False:
-#         return f"Input String = \"{input_string}\"\nGrammar is not LL(1)\n"
-#     stack = [start_symbol, '$']
-#     buffer = []
-#     input_string = input_string.split()
-#     input_string.reverse()
-#     buffer = ['$'] + input_string
-
-#     # Writing Header for Parsing Steps:
-#     print("{:>70} {:>10} {:>20}\n".format("Input\t\t\t\t\tt\t\t\t\t\t", "Stack\t\t", "Action"))
-#     print()
-#     while True:
-#         # Checking for Valid End Condition:
-#         if stack == ['$'] and buffer == ['$']:
-#             print("{:>100} | {:>25} | {:>30}\n".format(' '.join(buffer), ' '.join(stack), "Valid"))
-#             return "Valid String!"
-
-#         # Parsing Non-terminals:
-#         elif stack[0] not in term_userdef:
-#             x = list(diction.keys()).index(stack[0])
-#             y = table_term_list.index(buffer[-1])
-#             print("x: ", x)
-#             if parsing_table[x][y] != '':
-#                 entry = parsing_table[x][y]
-#                 print("{:>100} | {:>25} | {:>30}\n".format(' '.join(buffer), ' '.join(stack),
-#                                                            f"T[{stack[0]}][{buffer[-1]}]={entry}"))
-#                 lhs_rhs = entry.split("->")
-#                 lhs_rhs[1] = lhs_rhs[1].replace('#', '').strip()
-#                 entryrhs = lhs_rhs[1].split()
-#                 stack = entryrhs + stack[1:]
-#             else:
-#                 return f" Invalid String! No rule at " \
-#                        f"Table[{stack[0]}][{buffer[-1]}]."
-
-#         # Matching Terminals:
-#         else:
-#             if stack[0] == buffer[-1]:
-#                 print(
-#                     "{:>100} | {:>25} | {:>30}\n".format(' '.join(buffer), ' '.join(stack), f"Matched1:{stack[0]}"))
-#                 buffer = buffer[:-1]
-#                 stack = stack[1:]
-#             else:
-#                 return "Invalid String! Unmatched terminal symbols\n"
-
-
 
 def validateStringUsingStackBuffer(parsing_table, grammarll1,
                                    table_term_list, input_string,
@@ -455,7 +404,6 @@ def validateStringUsingStackBuffer(parsing_table, grammarll1,
                 else:
                     return f"Invalid String! No rule at Table[{non_terminal}][{terminal}]."
             else:
-                print("buffer: ",buffer)
                 return f"Invalid String! Non-terminal '{non_terminal}' or terminal '{terminal}' not found in parsing table."
                 
         # Matching Terminals:
