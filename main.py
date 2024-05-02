@@ -3,6 +3,7 @@ import warnings
 from tabulate import tabulate
 import copy
 import sys
+import csv
 
 warnings.filterwarnings("ignore")
 
@@ -272,12 +273,20 @@ def createParseTable():
     # Filling in the Parsing Table
     for lhs, rhs_list in diction.items():
         for rhs in rhs_list:
+
+            
             first_rhs = first(rhs)
             if first_rhs is not None:
+                if not isinstance(first_rhs, list):
+                    first_rhs = [first_rhs]
                 for term in first_rhs:
+
                     if term != '#':
+                        # print("lhs: ", lhs, "term: ", term, "rhs: ", rhs)
                         parsing_table[lhs][term] = f"{lhs} -> {' '.join(rhs)}"
                 if '#' in first_rhs:
+                    print("lhs: ", lhs, "term: ", follow_symbol, "rhs: ", rhs)
+
                     for follow_symbol in follows[lhs]:
                         parsing_table[lhs][follow_symbol] = f"{lhs} -> {' '.join(rhs)}"
 
@@ -285,7 +294,13 @@ def createParseTable():
     table_headers = [''] + term_userdef + ['$']
     table_data = [[nt] + [parsing_table[nt][t] for t in term_userdef + ['$']] for nt in nonterm_userdef]
     print("\nGenerated parsing table:")
-    print(tabulate(table_data, headers=table_headers, tablefmt="fancy_grid"))
+    print(tabulate(table_data, headers=table_headers))
+
+    with open('parsing_table.csv', 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(table_headers)
+        writer.writerows(table_data)
+
 
     # Check if grammar is LL(1)
     grammar_is_LL = all(parsing_table[nt][t] == '' for nt in nonterm_userdef for t in term_userdef + ['$'])
@@ -514,4 +529,6 @@ print("=========================================================================
 # grammar = diction
 print("\n \n")
 (parsing_table, result, tabTerm) = createParseTable()
+
+
 
