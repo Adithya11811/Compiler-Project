@@ -3,15 +3,17 @@ import warnings
 from tabulate import tabulate
 import copy
 import sys
+
 warnings.filterwarnings("ignore")
 
 # Token types
 tokens = [
-    'PRINT', 'INTEGER', 'REAL', 'STRING', 'EQUAL','END','BEGIN','KEYWORD',
+    'PRINT', 'INTEGER', 'REAL', 'STRING', 'EQUAL', 'END', 'BEGIN', 'KEYWORD',
     'REAL_VALUE', 'INTEGER_VALUE', 'STRING_VALUE',
-    'FOR', 'TO', 'COLON', 'SEMICOLON', 'LEFT_BRACKET','IDENTIFIER',
-    'RIGHT_BRACKET','COMMA'
+    'FOR', 'TO', 'COLON', 'SEMICOLON', 'LEFT_BRACKET', 'IDENTIFIER',
+    'RIGHT_BRACKET', 'COMMA'
 ]
+
 
 # Lexical analyzer
 class Lexer:
@@ -77,8 +79,9 @@ class Lexer:
     def get_tokens(self):
         return self.tokens
 
-def removeLeftRecursion (rulesDiction):
-    print("rulesDiction: ",rulesDiction)
+
+def removeLeftRecursion(rulesDiction):
+    print("rulesDiction: ", rulesDiction)
     store = {}
     for lhs in rulesDiction:
         # alphaRules will store the rules with left recursion.
@@ -96,23 +99,24 @@ def removeLeftRecursion (rulesDiction):
         ''' If there are rules with left recursion (alphaRules is not empty), it creates a new non-terminal symbol (lhs_) to replace the left-recursive rules. The loop ensures that the new symbol doesn't already exist in the original grammar or in the temporary storage (store).'''
 
         if len(alphaRules) != 0:
-            lhs_ = lhs +"'"
+            lhs_ = lhs + "'"
             while (lhs in rulesDiction.keys()) \
-                or (lhs_ in store.keys()):
-                lhs_ +="'"
+                    or (lhs_ in store.keys()):
+                lhs_ += "'"
             # For each rule in betaRules, it appends the new non-terminal lhs_
             # to the end of the rule and updates the original non-terminal's rules with the modified betaRules.
             for b in range(0, len(betaRules)):
-                betaRules [b].append(lhs_)
-            rulesDiction [lhs] = betaRules
+                betaRules[b].append(lhs_)
+            rulesDiction[lhs] = betaRules
             for a in range(0, len(alphaRules)):
-                alphaRules [a].append(lhs_)
+                alphaRules[a].append(lhs_)
             alphaRules.append(['#'])
             store[lhs_] = alphaRules
     for left in store:
         # Result of left recursion will be stored in temp storage store
-        rulesDiction [left] = store[left]
+        rulesDiction[left] = store[left]
     return rulesDiction
+
 
 def LeftFactoring(rulesDiction):
     # This dictionary will store the left-factored grammar rules.
@@ -136,8 +140,8 @@ def LeftFactoring(rulesDiction):
             if len(allStartingWithTermKey) > 1:
                 lhs_ = lhs + "'"
                 while (lhs in rulesDiction.keys()) \
-                     or (lhs_ in tempo_dict.keys()):
-                  lhs_ += "'"
+                        or (lhs_ in tempo_dict.keys()):
+                    lhs_ += "'"
                 new_rule.append([term_key, lhs_])
                 ex_rules = []
                 for g in temp[term_key]:
@@ -152,58 +156,57 @@ def LeftFactoring(rulesDiction):
             newDict[key] = tempo_dict[key]
     return newDict
 
-
 def first(rule):
     # print("rule: ",rule)
-    global rules,nonterm_userdef,\
-        term_userdef,diction,firsts
+    global rules, nonterm_userdef, \
+        term_userdef, diction, firsts
     if len(rule) != 0 and (rule is not None):
         if rule[0] in term_userdef:
             return rule[0]
-        elif rule[0] == '#': # For epsilon
+        elif rule[0] == '#':  # For epsilon
             return '#'
-    # If the first symbol is a non-terminal, recursively calculate the FIRST set for the corresponding 
-    #right-hand side rules in the grammar.
+    # If the first symbol is a non-terminal, recursively calculate the FIRST set for the corresponding
+    # right-hand side rules in the grammar.
 
-    
     if len(rule) != 0:
-            if rule[0] in list(diction.keys()):
-                fres = []
-                rhs_rules = diction[rule[0]]
-                for itr in rhs_rules:
-                    indivRes = first(itr)
-                    if type(indivRes) is list:
-                        for i in indivRes:
-                            fres.append(i)
-                    else:
-                        fres.append(indivRes)
-
-                '''
-                If the FIRST set of the non-terminal contains epsilon ('#'), remove it from the set.
-                If the remaining symbols in the rule can derive epsilon, add epsilon back to the set.
-                '''
-                
-                if '#' not in fres:
-                    return fres
+        if rule[0] in list(diction.keys()):
+            fres = []
+            rhs_rules = diction[rule[0]]
+            for itr in rhs_rules:
+                indivRes = first(itr)
+                if type(indivRes) is list:
+                    for i in indivRes:
+                        fres.append(i)
                 else:
-                    newList = []
-                    fres.remove('#')
-                    if len(rule) > 1:
-                        ansNew = first (rule[1:])
-                        if ansNew != None:
-                            if type(ansNew) is list:
-                                newList = fres + ansNew
-                            else:
-                                newList = fres + [ansNew]
+                    fres.append(indivRes)
+
+            '''
+            If the FIRST set of the non-terminal contains epsilon ('#'), remove it from the set.
+            If the remaining symbols in the rule can derive epsilon, add epsilon back to the set.
+            '''
+
+            if '#' not in fres:
+                return fres
+            else:
+                newList = []
+                fres.remove('#')
+                if len(rule) > 1:
+                    ansNew = first(rule[1:])
+                    if ansNew != None:
+                        if type(ansNew) is list:
+                            newList = fres + ansNew
                         else:
-                            newList = fres
-                        return newList
-                    fres.append('#')
-                    return fres
+                            newList = fres + [ansNew]
+                    else:
+                        newList = fres
+                    return newList
+                fres.append('#')
+                return fres
+
 
 def follow(nt):
     global start_symbol, rules, nonterm_userdef, \
-    term_userdef, diction, firsts, follows
+        term_userdef, diction, firsts, follows
     # The solset set will store the symbols in the FOLLOW set for the given non-terminal.
     solset = set()
     # print("nt: ",nt)
@@ -215,7 +218,6 @@ def follow(nt):
         rhs = diction[curNT]
         for subrule in rhs:
             # Finding the Occurrences of the Target Non-terminal in a Rule:
-            print("curNT: ",curNT,"subrule: ",subrule)
 
             if nt in subrule:
 
@@ -226,36 +228,47 @@ def follow(nt):
                     # Handling Symbols Following the Target Non-terminal:
                     if len(subrule) != 0:
                         # print("subrule: ",subrule,"res: ",firsts.get(subrule[0]))
-                        res = list(firsts.get(subrule[0]))
-                        # print("res: ",res)
+                        first_set = firsts.get(subrule[0])
+                        if first_set is not None:
+                            res = list(first_set)
+                            print("res: ",res)
 
-                    # Handling Epsilon Transitions in FIRST set
-                        if '#' in res:
-                            newList = []
-                            res.remove('#')
-                            ansNew = follow(curNT)
-                            if ansNew != None:
-                                if type(ansNew) is list:
-                                    newList = res + ansNew
-                                else:
-                                    newList = res + [ansNew]
-                            else:
-                                newList = res
-                            res = newList
-                    else:
-                        if nt != curNT:
-                             res = follow(curNT)
+                            # Handling Epsilon Transitions in FIRST set
+                        # if '#' in res:
+                        #     newList = []
+                        #     # res.remove('#')
+                        #     print(curNT)
+                        #     ansNew = follow(curNT)
+                        #     # print("ansNew")
+                        #     if ansNew != None:
+                        #         if type(ansNew) is list:
+                        #             newList = res + ansNew
+                        #         else:
+                        #             newList = res + [ansNew]
+                        #     else:
+                        #         newList = res
+                        #     res = newList
+                        #     print("curNT: ", curNT, "| subrule: ", subrule, "| res: ", res, "| nt: ", nt)
+                        # #
+                        # else:
+                        #     res=[]
+                    # else:
+                        # if nt != curNT:
+                        #     res = follow(curNT)
+                            # print(res)
+                            # print("curNT: ", curNT, "| subrule: ", subrule, "| res: ", res, "| nt: ", nt)
                     # Adding Symbols to solset
-                    if res is not None:
-                        if type(res) is list:
-                            for g in res:
-                                solset.add(g)
-                        else:
-                            solset.add(res)
+                    # if res is not None:
+                    #     if type(res) is list:
+                    #         for g in res:
+                    #             solset.add(g)
+                    #     else:
+                    #         solset.add(res)
     return list(solset)
 
+
 def computeAllFirsts():
-    print("aloo ")
+    # print("aloo ")
     global rules, nonterm_userdef, \
         term_userdef, diction, firsts
     for rule in rules:
@@ -271,16 +284,16 @@ def computeAllFirsts():
     print(f"\nRules: \n")
     for y in diction:
         print(f"{y}->{diction[y]}")
-    # Open a file named rules.txt in write mode 
+    # Open a file named rules.txt in write mode
     # with open('rules.txt', 'w') as file:
-       # file.write("Rules: \n")
-    #for y in diction:
-           # file.write(f"{y} -> {diction [y]}\n")
+    # file.write("Rules: \n")
+    # for y in diction:
+    # file.write(f"{y} -> {diction [y]}\n")
     # Remove left recursion
-    diction = removeLeftRecursion (diction)
+    diction = removeLeftRecursion(diction)
     # Remove left factoring
-    print("balo")
-    diction = LeftFactoring (diction)
+    # print("balo")
+    diction = LeftFactoring(diction)
     for y in list(diction.keys()):
         t = set()
         for sub in diction.get(y):
@@ -301,7 +314,6 @@ def computeAllFirsts():
     #     print(f"first({key_list[index]}) "f"=> {firsts.get(gg)}")
     #     index += 1
 
-    
 
 def computeAllFollows():
     global start_symbol, rules, nonterm_userdef, \
@@ -324,7 +336,7 @@ def computeAllFollows():
 
 def createParseTable():
     import copy
-    global diction, firsts, follows, term_userdef 
+    global diction, firsts, follows, term_userdef
     print("\n")
     print("===================================================================")
     print("Firsts and Follow Result table")
@@ -338,19 +350,19 @@ def createParseTable():
             mx_len_first = k1
         if k2 > mx_len_fol:
             mx_len_fol = k2
-   # print(tabulate([["Non-T", "FIRST", "FOLLOW"]] + [[u, str(firsts [u]),
-                    #str(follows [u])] for u in diction], headers='first row', tablefmt='fancy_grid'))
-   # print("\n")
-    #print("================================================================================")
+    # print(tabulate([["Non-T", "FIRST", "FOLLOW"]] + [[u, str(firsts [u]),
+    # str(follows [u])] for u in diction], headers='first row', tablefmt='fancy_grid'))
+    # print("\n")
+    # print("================================================================================")
     print(f"{{:<{10}}} "
-        f"{{:<{mx_len_first + 5}}} "
-        f"{{:<{mx_len_fol + 5}}}"
-        .format("Non-T", "FIRST", "FOLLOW"))
+          f"{{:<{mx_len_first + 5}}} "
+          f"{{:<{mx_len_fol + 5}}}"
+          .format("Non-T", "FIRST", "FOLLOW"))
     for u in diction:
         print(f"{{:<{10}}} "
-            f"{{:<{mx_len_first + 5}}} "
-            f"{{:<{mx_len_fol + 5}}}"
-            .format(u, str(firsts[u]), str(follows[u])))
+              f"{{:<{mx_len_first + 5}}} "
+              f"{{:<{mx_len_fol + 5}}}"
+              .format(u, str(firsts[u]), str(follows[u])))
     ntlist = list(diction.keys())
     terminals = copy.deepcopy(term_userdef)
     terminals.remove('(')
@@ -359,16 +371,16 @@ def createParseTable():
     terminals.remove('-')
     terminals.remove('=')
     terminals.remove('1')
-    
+
     terminals.append('$')
-    
+
     mat = []
     for x in diction:
         row = []
         for y in terminals:
             row.append('')
         mat.append(row)
-        
+
     grammar_is_LL = True
 
     # Filling in the Parsing Table:
@@ -377,7 +389,7 @@ def createParseTable():
         rhs = diction[lhs]
         for y in rhs:
             res = first(y)
-        #if res is not None:  # Add this line to check if res is not None
+            # if res is not None:  # Add this line to check if res is not None
             if '#' in res:
                 if type(res) == str:
                     firstFollow = []
@@ -391,10 +403,10 @@ def createParseTable():
                 else:
                     res.remove('#')
                     res = list(res) + \
-                        list(follows[lhs])
-        #else:
+                          list(follows[lhs])
+            # else:
             # Handle the case when res is None
-           # res = list(follows[lhs]) if isinstance(follows[lhs], list) else [follows[lhs]]
+            # res = list(follows[lhs]) if isinstance(follows[lhs], list) else [follows[lhs]]
             ttemp = []
             if type(res) is str:
                 ttemp.append(res)
@@ -410,7 +422,7 @@ def createParseTable():
                     else:
                         grammar_is_LL = False
                     mat[xnt][yt] = mat[xnt][yt] \
-                        + f",{lhs}->{' '.join(y)}"
+                                   + f",{lhs}->{' '.join(y)}"
 
     print("\nGenerated parsing table:\n")
     frmt = "{:>15}" * len(terminals)
@@ -421,6 +433,71 @@ def createParseTable():
         print(f"{ntlist[j]} {frmt1.format(*y)}")
         j += 1
     return (mat, grammar_is_LL, terminals)
+
+
+def initialize_follow(grammar):
+    follow = {}
+    for non_terminal in grammar:
+        follow[non_terminal] = set()
+    return follow
+
+def compute_first_set(symbols, firsts, terminals):
+    first = set()
+    for symbol in symbols:
+        if symbol in terminals:  # If symbol is a terminal, add it to the first set
+            first.add(symbol)
+            return first  # Stop processing further symbols
+        elif symbol in firsts:  # If symbol is a non-terminal, add its first set to the result
+            first.update(firsts[symbol])
+            if None not in firsts[symbol]:  # If epsilon is not in the first set, stop processing further symbols
+                return first
+            else:
+                first.remove(None)  # If epsilon is in the first set, remove it and continue processing
+        else:
+            raise ValueError(f"Unknown symbol '{symbol}'")
+
+    # If all symbols can derive epsilon, add epsilon to the first set
+    first.add(None)
+    return first
+
+
+def compute_follow():
+    global firsts, grammar, start_symbol, term_userdef, nonterm_userdef, follows
+    # Step 1: Initialize FOLLOW sets
+    follows = {nonterm: set() for nonterm in nonterm_userdef}
+
+    # Step 2: Add end marker to the start symbol's FOLLOW set
+    follows[start_symbol].add('$')
+
+    # Step 3: Iterate until no further changes occur
+    while True:
+        prev_follow = {nonterm: follows[nonterm].copy() for nonterm in nonterm_userdef}
+
+        # Step 4: Iterate over each grammar rule
+        for lhs, rulees in grammar.items():
+            for rhs in rulees:
+                for i, symbol in enumerate(rhs):
+                    # Step 5: Update FOLLOW sets
+                    if symbol in nonterm_userdef:
+                        next_symbols = rhs[i+1:]
+                        next_symbols_first = compute_first_set(next_symbols, firsts, term_userdef)
+
+                        # Add FIRST set of next symbols to current non-terminal's FOLLOW set
+                        follows[symbol].update(next_symbols_first)
+                        # If next symbols can derive epsilon, add FOLLOW(lhs) to FOLLOW(symbol)
+                        if '#' in next_symbols_first:
+                            follows[symbol].update(follows[lhs])
+                            # If epsilon is followed by other symbols, add their FIRST sets to FOLLOW(symbol)
+                            for j in range(i+1, len(rhs)):
+                                if rhs[j] in term_userdef:
+                                    follows[symbol].add(rhs[j])
+
+
+        # Step 6: Check for convergence
+        if prev_follow == follows:
+            break
+
+    return follows
 
 # Test the lexer
 code = """
@@ -461,7 +538,7 @@ print(code)
 
 tokens = lexer.get_tokens()
 
-#hege acess madudu helthirudu
+# hege acess madudu helthirudu
 # print(tokens[0][1])
 
 token_dict = {}
@@ -479,25 +556,31 @@ for token_type, token_value in tokens:
 
 
 rules1 = [
-    "S -> "+token_dict['BEGIN'][0]+" statement_list "+token_dict['END'][0]+" ",
+    "S -> " + token_dict['BEGIN'][0] + " statement_list " + token_dict['END'][0] + " ",
     "statement_list -> statement_list statement | statement",
-    "statement -> declaration | assignment | "+token_dict['PRINT'][0]+" LIT | loop",
+    "statement -> declaration | assignment | " + token_dict['PRINT'][0] + " LIT | loop",
     "declaration -> type ID_list",
-    "type -> "+token_dict['INTEGER'][0]+" | "+token_dict['REAL'][0]+" | "+token_dict['STRING'][0]+"",
+    "type -> " + token_dict['INTEGER'][0] + " | " + token_dict['REAL'][0] + " | " + token_dict['STRING'][0] + "",
     "ID_list -> ID_list , ID | ID",
-    "assignment -> ID "+token_dict['EQUAL'][0]+" expression",
+    "assignment -> ID " + token_dict['EQUAL'][0] + " expression",
     "expression ->  ID | NUM | REAL_DIG | LIT",
-    "loop -> "+token_dict['FOR'][0]+" ID "+token_dict['EQUAL'][0]+" NUM "+token_dict['TO'][0]+" NUM  statement",
-    "ID -> "+token_dict['IDENTIFIER'][0]+" | "+token_dict['IDENTIFIER'][1]+" |"+token_dict['IDENTIFIER'][2]+" |"+token_dict['IDENTIFIER'][3]+" |"+token_dict['IDENTIFIER'][4]+" |"+token_dict['IDENTIFIER'][5]+" |"+token_dict['IDENTIFIER'][6]+" |"+token_dict['IDENTIFIER'][7]+"  ",
-    "LIT -> "+token_dict['STRING_VALUE'][0]+" | "+token_dict['STRING_VALUE'][1]+" | "+token_dict['STRING_VALUE'][2]+" | "+token_dict['STRING_VALUE'][3]+" ",
-    "NUM -> "+token_dict['INTEGER_VALUE'][0]+" | "+token_dict['INTEGER_VALUE'][1]+"| "+token_dict['INTEGER_VALUE'][2]+" | "+token_dict['INTEGER_VALUE'][3]+" | "+token_dict['INTEGER_VALUE'][4]+" ",
-    "REAL_DIG -> "+token_dict['REAL_VALUE'][0]+" | "+token_dict['REAL_VALUE'][1]+" ",
-    
+    "loop -> " + token_dict['FOR'][0] + " ID " + token_dict['EQUAL'][0] + " NUM " + token_dict['TO'][
+        0] + " NUM  statement",
+    "ID -> " + token_dict['IDENTIFIER'][0] + " | " + token_dict['IDENTIFIER'][1] + " |" + token_dict['IDENTIFIER'][
+        2] + " |" + token_dict['IDENTIFIER'][3] + " |" + token_dict['IDENTIFIER'][4] + " |" + token_dict['IDENTIFIER'][
+        5] + " |" + token_dict['IDENTIFIER'][6] + " |" + token_dict['IDENTIFIER'][7] + "  ",
+    "LIT -> " + token_dict['STRING_VALUE'][0] + " | " + token_dict['STRING_VALUE'][1] + " | " +
+    token_dict['STRING_VALUE'][2] + " | " + token_dict['STRING_VALUE'][3] + " ",
+    "NUM -> " + token_dict['INTEGER_VALUE'][0] + " | " + token_dict['INTEGER_VALUE'][1] + "| " +
+    token_dict['INTEGER_VALUE'][2] + " | " + token_dict['INTEGER_VALUE'][3] + " | " + token_dict['INTEGER_VALUE'][
+        4] + " ",
+    "REAL_DIG -> " + token_dict['REAL_VALUE'][0] + " | " + token_dict['REAL_VALUE'][1] + " ",
+
 ]
 
-rules3 = [
+rules = [
     "S -> BEGIN statement_list END ",
-    "statement_List -> statement st_li",
+    "statement_list -> statement st_li",
     "st_li -> statement st_li | # ",
     "statement -> declaration | assignment | PRINT LIT | loop",
     "declaration -> type ID_list",
@@ -511,10 +594,9 @@ rules3 = [
     "LIT -> HELLO | text1 | hello there | Strings are [X] and [Y] ",
     "NUM -> 2 | 4 | 6 | 1 | 5 ",
     "REAL_DIG -> -3.65E-8 | 4.567 ",
-    
 ]
 
-rules = [
+rules3 = [
     "S -> BEGIN statement_list END",
     "statement_List -> statement st_li",
     "st_li -> statement st_li",
@@ -557,22 +639,42 @@ rules = [
     "REAL_DIG -> 4.567"
 ]
 
-
-
-
 print(token_dict)
-nonterm_userdef = ['S','statement_list','statement','declaration','type','ID_list','assignment','expression','loop','ID','LIT','NUM','REAL_DIG','st_li','idli']
-term_userdef = ['BEGIN','END','PRINT','2','4','6','1','5','-3.65E-8','4.567',':=','FOR','TO','A' ,'B' ,'C' , 'D', 'E' ,'X' ,'Y' ,'I','HELLO' , 'text1' , 'hello there', 'Strings are [X] and [Y]',"#", "INTEGER", "REAL", "STRING","," ]
+nonterm_userdef = ['S', 'statement_list', 'statement', 'declaration', 'type', 'ID_List', 'assignment', 'expression',
+                   'loop', 'ID', 'LIT', 'NUM', 'REAL_DIG', 'st_li', 'idli']
+term_userdef = ['BEGIN', 'END', 'PRINT', '2', '4', '6', '1', '5', '-3.65E-8', '4.567', ':=', 'FOR', 'TO', 'A', 'B', 'C',
+                'D', 'E', 'X', 'Y', 'I', 'HELLO', 'text1', 'hello there', 'Strings are [X] and [Y]', "#", "INTEGER",
+                "REAL", "STRING", ","]
 
 # # List of terminals in our grammar
 # term_userdef = [token_dict['BEGIN'][0],token_dict['END'][0],token_dict['PRINT'][0],token_dict['INTEGER'][0],token_dict['REAL'][0],token_dict['STRING'][0],token_dict['EQUAL'][0],token_dict['FOR'][0],token_dict['TO'][0],',',token_dict['IDENTIFIER'][0],token_dict['IDENTIFIER'][1],token_dict['IDENTIFIER'][2],token_dict['IDENTIFIER'][3],token_dict['IDENTIFIER'][4],token_dict['IDENTIFIER'][5],token_dict['IDENTIFIER'][6],token_dict['IDENTIFIER'][7],token_dict['STRING_VALUE'][0],token_dict['STRING_VALUE'][1],token_dict['STRING_VALUE'][2],token_dict['STRING_VALUE'][3],token_dict['INTEGER_VALUE'][0],token_dict['INTEGER_VALUE'][1],token_dict['INTEGER_VALUE'][2],token_dict['INTEGER_VALUE'][3],token_dict['INTEGER_VALUE'][4],token_dict['REAL_VALUE'][0],token_dict['REAL_VALUE'][1]]
+
+grammar = {
+    'S': [['BEGIN', 'statement_list', 'END']],
+    'statement_list': [['statement', 'st_li']],
+    'st_li': [['statement', 'st_li'], ['#']],
+    'statement': [['declaration'], ['assignment'], ['PRINT', 'LIT'], ['loop']],
+    'declaration': [['type', 'ID_List']],
+    'type': [['INTEGER'], ['REAL'], ['STRING']],
+    'ID_List': [['ID', 'idli']],
+    'idli': [[',', 'ID', 'idli'], ['#']],
+    'assignment': [['ID', ':=', 'expression']],
+    'expression': [['ID'], ['NUM'], ['REAL_DIG'], ['LIT']],
+    'loop': [['FOR', 'ID', ':=', 'NUM', 'TO', 'NUM', 'statement']],
+    'ID': [['A'], ['B'], ['C'], ['D'], ['E'], ['X'], ['Y'], ['I']],
+    'LIT': [['HELLO'], ['text1'], ['hello', 'there'], ['Strings', 'are', '[X]', 'and', '[Y]']],
+    'NUM': [['2'], ['4'], ['6'], ['1'], ['5']],
+    'REAL_DIG': [['-3.65E-8'], ['4.567']]
+}
 
 diction = {}
 firsts = {}
 follows = {}
 computeAllFirsts()
-start_symbol = list(diction.keys())[0]
-print(start_symbol)
+# start_symbol = list(diction.keys())[0]
+# print(start_symbol)
+print("================================================================================================")
+print(firsts)
 print("================================================================================================")
 print("\nCalculated firsts: ")
 key_list = list(firsts.keys())
@@ -580,8 +682,40 @@ index = 0
 for gg in firsts:
     print(f"first({key_list[index]}) "f"=> {firsts.get(gg)}")
     index += 1
-print("dictionary: ",diction)
-computeAllFollows()
+print("dictionary: ", diction)
+
+start_symbol = 'S'
+# computeAllFollows()
+# print(grammar == diction)
+follows = compute_follow()
+print("\n \n")
+print("================================================================================================")
+# print(grammar)
+# grammar = diction
+def print_grammar(grammar):
+    for non_terminal, productions in grammar.items():
+        print(f"{non_terminal} -> ", end="")
+        for production in productions:
+            print(production, end=" | ")
+        print("\n")
+
+def print_diction(grammar):
+    for non_terminal, productions in grammar.items():
+        print(f"{non_terminal} -> ", end="")
+        for production in productions:
+            print(production, end=" | ")
+        print("\n")
+
+print_grammar(grammar)
+print("================================================================================================")
+print_diction(diction)
+
+
+
+print("\n \n")
+# Output the computed FOLLOW sets
+for non_terminal, follow_set in follows.items():
+    print(f'FOLLOW({non_terminal}): {follow_set}')
 # (parsing_table, result, tabTerm) = createParseTable()
 
 # if code != None:
