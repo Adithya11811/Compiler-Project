@@ -468,7 +468,7 @@ for token_type, token_value in tokens:
     else:
         token_dict[token_type] = [token_value]
 
-# print(token_dict)
+print(token_dict)
 
 
 # print(token_dict['BEGIN'][0])
@@ -477,9 +477,9 @@ for token_type, token_value in tokens:
 
 
 rules = [
-    "S -> BEGIN statement_list END ",
+    "S -> "+token_dict['BEGIN'][0]+" statement_list "+token_dict['END'][0]+" ",
     "statement_list -> statement st_li",
-    "st_li -> statement st_li | # ",
+    "st_li -> statement st_li | #",
     "statement -> declaration | assignment | PRINT LIT | loop",
     "declaration -> type ID_List",
     "type -> INTEGER | REAL | STRING",
@@ -488,10 +488,10 @@ rules = [
     "assignment -> ID := expression",
     "expression ->  ID | NUM | REAL_DIG | LIT",
     "loop -> FOR ID := NUM TO  NUM  statement",
-    "ID -> A | B | C  | D | E | X | Y | I ",
-    'LIT -> "HELLO" | "text1" |  "hello_there" | "Strings_are_[X]_and_[Y]" ',
-    "NUM -> 2 | 4 | 6 | 1 | 5 ",
-    "REAL_DIG -> -3.65E-8 | 4.567 ",
+    "ID -> "+token_dict["IDENTIFIER"][0]+" | "+token_dict["IDENTIFIER"][1]+"  | "+token_dict["IDENTIFIER"][2]+"   | "+token_dict["IDENTIFIER"][3]+"  | "+token_dict["IDENTIFIER"][4]+"  | "+token_dict["IDENTIFIER"][5]+"  | "+token_dict["IDENTIFIER"][6]+" | "+token_dict["IDENTIFIER"][7]+"",
+    'LIT -> '+token_dict["STRING_VALUE"][0]+'  | '+token_dict["STRING_VALUE"][1]+' |  '+token_dict["STRING_VALUE"][2]+' | '+token_dict["STRING_VALUE"][3]+' ',
+    "NUM -> "+token_dict["INTEGER_VALUE"][0]+" | "+token_dict["INTEGER_VALUE"][1]+" | "+token_dict["INTEGER_VALUE"][2]+" | "+token_dict["INTEGER_VALUE"][3]+"  ",
+    "REAL_DIG -> "+token_dict["REAL_VALUE"][0]+" | "+token_dict["REAL_VALUE"][1]+" ",
 ]
 
 
