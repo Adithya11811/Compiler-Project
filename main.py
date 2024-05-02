@@ -203,70 +203,6 @@ def first(rule):
                 fres.append('#')
                 return fres
 
-
-def follow(nt):
-    global start_symbol, rules, nonterm_userdef, \
-        term_userdef, diction, firsts, follows
-    # The solset set will store the symbols in the FOLLOW set for the given non-terminal.
-    solset = set()
-    # print("nt: ",nt)
-    # Handling the Start Symbol:
-    if nt == start_symbol:
-        solset.add('$')
-    # Iterating Over Non-terminals and Production Rules:
-    for curNT in diction:
-        rhs = diction[curNT]
-        for subrule in rhs:
-            # Finding the Occurrences of the Target Non-terminal in a Rule:
-
-            if nt in subrule:
-
-                while nt in subrule:
-                    index_nt = subrule.index(nt)
-                    subrule = subrule[index_nt + 1:]
-
-                    # Handling Symbols Following the Target Non-terminal:
-                    if len(subrule) != 0:
-                        # print("subrule: ",subrule,"res: ",firsts.get(subrule[0]))
-                        first_set = firsts.get(subrule[0])
-                        if first_set is not None:
-                            res = list(first_set)
-                            print("res: ",res)
-
-                            # Handling Epsilon Transitions in FIRST set
-                        # if '#' in res:
-                        #     newList = []
-                        #     # res.remove('#')
-                        #     print(curNT)
-                        #     ansNew = follow(curNT)
-                        #     # print("ansNew")
-                        #     if ansNew != None:
-                        #         if type(ansNew) is list:
-                        #             newList = res + ansNew
-                        #         else:
-                        #             newList = res + [ansNew]
-                        #     else:
-                        #         newList = res
-                        #     res = newList
-                        #     print("curNT: ", curNT, "| subrule: ", subrule, "| res: ", res, "| nt: ", nt)
-                        # #
-                        # else:
-                        #     res=[]
-                    # else:
-                        # if nt != curNT:
-                        #     res = follow(curNT)
-                            # print(res)
-                            # print("curNT: ", curNT, "| subrule: ", subrule, "| res: ", res, "| nt: ", nt)
-                    # Adding Symbols to solset
-                    # if res is not None:
-                    #     if type(res) is list:
-                    #         for g in res:
-                    #             solset.add(g)
-                    #     else:
-                    #         solset.add(res)
-    return list(solset)
-
-
 def computeAllFirsts():
     # print("aloo ")
     global rules, nonterm_userdef, \
@@ -314,190 +250,136 @@ def computeAllFirsts():
     #     print(f"first({key_list[index]}) "f"=> {firsts.get(gg)}")
     #     index += 1
 
-
-def computeAllFollows():
-    global start_symbol, rules, nonterm_userdef, \
-        term_userdef, diction, firsts, follows
-    for NT in diction:
-        solset = set()
-        # print("NT dfghj: ",NT)
-        sol = follow(NT)
-        if sol is not None:
-            for g in sol:
-                solset.add(g)
-        follows[NT] = solset
-    print("\nCalculated follows: ")
-    key_list = list(follows.keys())
-    index = 0
-    for gg in follows:
-        print(f"follow({key_list[index]})"f" => {follows[gg]}")
-        index + 1
-
-
 def createParseTable():
     import copy
-    global diction, firsts, follows, term_userdef
-    print("\n")
-    print("===================================================================")
+    global diction, firsts, follows, nonterm_userdef, term_userdef
+
+    # Combine terminals and non-terminals
+    all_symbols = nonterm_userdef + term_userdef + ['$']
+
+    # Print FIRST and FOLLOW Sets
+    mx_len_first = max(len(str(f)) for f in firsts.values())
+    mx_len_fol = max(len(str(f)) for f in follows.values())
+
     print("Firsts and Follow Result table")
-    # Printing FIRST and FOLLOW Sets
-    mx_len_first = 0
-    mx_len_fol = 0
-    for u in diction:
-        k1 = len(str(firsts[u]))
-        k2 = len(str(follows[u]))
-        if k1 > mx_len_first:
-            mx_len_first = k1
-        if k2 > mx_len_fol:
-            mx_len_fol = k2
-    # print(tabulate([["Non-T", "FIRST", "FOLLOW"]] + [[u, str(firsts [u]),
-    # str(follows [u])] for u in diction], headers='first row', tablefmt='fancy_grid'))
-    # print("\n")
-    # print("================================================================================")
-    print(f"{{:<{10}}} "
-          f"{{:<{mx_len_first + 5}}} "
-          f"{{:<{mx_len_fol + 5}}}"
-          .format("Non-T", "FIRST", "FOLLOW"))
-    for u in diction:
-        print(f"{{:<{10}}} "
-              f"{{:<{mx_len_first + 5}}} "
-              f"{{:<{mx_len_fol + 5}}}"
-              .format(u, str(firsts[u]), str(follows[u])))
-    ntlist = list(diction.keys())
-    terminals = copy.deepcopy(term_userdef)
-    terminals.remove('(')
-    terminals.remove(')')
-    terminals.remove('+')
-    terminals.remove('-')
-    terminals.remove('=')
-    terminals.remove('1')
+    print(f"{'Non-T':<10} {'FIRST':<{mx_len_first + 5}} {'FOLLOW':<{mx_len_fol + 5}}")
+    for nt in nonterm_userdef:
+        print(f"{nt:<10} {str(firsts[nt]):<{mx_len_first + 5}} {str(follows[nt]):<{mx_len_fol + 5}}")
 
-    terminals.append('$')
+    # Initialize parsing table
+    parsing_table = {nt: {t: '' for t in term_userdef + ['$']} for nt in nonterm_userdef}
 
-    mat = []
-    for x in diction:
-        row = []
-        for y in terminals:
-            row.append('')
-        mat.append(row)
+    # Filling in the Parsing Table
+    for lhs, rhs_list in diction.items():
+        for rhs in rhs_list:
+            first_rhs = first(rhs)
+            if first_rhs is not None:
+                for term in first_rhs:
+                    if term != '#':
+                        parsing_table[lhs][term] = f"{lhs} -> {' '.join(rhs)}"
+                if '#' in first_rhs:
+                    for follow_symbol in follows[lhs]:
+                        parsing_table[lhs][follow_symbol] = f"{lhs} -> {' '.join(rhs)}"
 
-    grammar_is_LL = True
+    # Print the generated parsing table
+    table_headers = [''] + term_userdef + ['$']
+    table_data = [[nt] + [parsing_table[nt][t] for t in term_userdef + ['$']] for nt in nonterm_userdef]
+    print("\nGenerated parsing table:")
+    print(tabulate(table_data, headers=table_headers, tablefmt="fancy_grid"))
 
-    # Filling in the Parsing Table:
-    # Filling in the Parsing Table:
-    for lhs in diction:
-        rhs = diction[lhs]
-        for y in rhs:
-            res = first(y)
-            # if res is not None:  # Add this line to check if res is not None
-            if '#' in res:
-                if type(res) == str:
-                    firstFollow = []
-                    fol_op = follows[lhs]
-                    if fol_op is str:
-                        firstFollow.append(fol_op)
-                    else:
-                        for u in fol_op:
-                            firstFollow.append(u)
-                        res = firstFollow
-                else:
-                    res.remove('#')
-                    res = list(res) + \
-                          list(follows[lhs])
-            # else:
-            # Handle the case when res is None
-            # res = list(follows[lhs]) if isinstance(follows[lhs], list) else [follows[lhs]]
-            ttemp = []
-            if type(res) is str:
-                ttemp.append(res)
-                res = copy.deepcopy(ttemp)
-            for c in res:
-                xnt = ntlist.index(lhs)
-                yt = terminals.index(c)
-                if mat[xnt][yt] == '':
-                    mat[xnt][yt] = mat[xnt][yt] + f"{lhs}->{' '.join(y)}"
-                else:
-                    if f"{lhs}->{y}" in mat[xnt][yt]:
-                        continue
-                    else:
-                        grammar_is_LL = False
-                    mat[xnt][yt] = mat[xnt][yt] \
-                                   + f",{lhs}->{' '.join(y)}"
+    # Check if grammar is LL(1)
+    grammar_is_LL = all(parsing_table[nt][t] == '' for nt in nonterm_userdef for t in term_userdef + ['$'])
 
-    print("\nGenerated parsing table:\n")
-    frmt = "{:>15}" * len(terminals)
-    print(frmt.format(*terminals))
-    j = 0
-    for y in mat:
-        frmt1 = "{:>15}" * len(y)
-        print(f"{ntlist[j]} {frmt1.format(*y)}")
-        j += 1
-    return (mat, grammar_is_LL, terminals)
+    return parsing_table, grammar_is_LL, term_userdef + ['$']
 
 
-def initialize_follow(grammar):
-    follow = {}
-    for non_terminal in grammar:
-        follow[non_terminal] = set()
-    return follow
+def computeAllFollows():
+    global start_symbol, rules, nonterm_userdef, term_userdef, diction, firsts, follows
+    for NT in diction:
+        solset = set()
+        sol = follow(NT, set())
+        if sol is not None:
+            solset |= sol
+        follows[NT] = solset
+    print("\nCalculated follows:")
+    for NT, follow_set in follows.items():
+        print(f"follow({NT}) => {follow_set}")
 
-def compute_first_set(symbols, firsts, terminals):
-    first = set()
-    for symbol in symbols:
-        if symbol in terminals:  # If symbol is a terminal, add it to the first set
-            first.add(symbol)
-            return first  # Stop processing further symbols
-        elif symbol in firsts:  # If symbol is a non-terminal, add its first set to the result
-            first.update(firsts[symbol])
-            if None not in firsts[symbol]:  # If epsilon is not in the first set, stop processing further symbols
-                return first
-            else:
-                first.remove(None)  # If epsilon is in the first set, remove it and continue processing
-        else:
-            raise ValueError(f"Unknown symbol '{symbol}'")
+def follow(nT, visited):
+    global firsts, diction, follows, term_userdef
+    follow_ = set()
+    if nT == start_symbol:
+        follow_ = follow_ | {'$'}
+    for nt, rhs in diction.items():
+        for alt in rhs:
+            if nT in alt:
+                idx = alt.index(nT)
+                if idx < len(alt) - 1:  # If nT is not the last symbol in alt
+                    following_str = alt[idx + 1:]
+                    for symbol in following_str:
+                        if symbol in term_userdef:  # If symbol is a terminal
+                            follow_ |= {symbol}
+                            break
+                        else:  # If symbol is a non-terminal
+                            firsts_of_symbol = firsts.get(symbol, set())
+                            follow_ |= firsts_of_symbol - {'#'}
+                            if '#' not in firsts_of_symbol:
+                                break
+                else:  # If nT is the last symbol in alt
+                    if nt != nT and nt not in visited:
+                        visited.add(nt)
+                        follow_ |= follow(nt, visited)
+    return follow_
 
-    # If all symbols can derive epsilon, add epsilon to the first set
-    first.add(None)
-    return first
+def validateStringUsingStackBuffer(parsing_table, grammarll1,
+                                   table_term_list, input_string,
+                                   term_userdef, start_symbol):
+    print(f"Validate String:\n\n{input_string}\n")
+    print("Look into the parsing.txt file for the parsing steps")
+    print("\n")
+    if grammarll1 == False:
+        return f"Input String = \"{input_string}\"\nGrammar is not LL(1)\n"
+    stack = [start_symbol, '$']
+    buffer = []
+    input_string = input_string.split()
+    input_string.reverse()
+    buffer = ['$'] + input_string
 
-
-def compute_follow():
-    global firsts, grammar, start_symbol, term_userdef, nonterm_userdef, follows
-    # Step 1: Initialize FOLLOW sets
-    follows = {nonterm: set() for nonterm in nonterm_userdef}
-
-    # Step 2: Add end marker to the start symbol's FOLLOW set
-    follows[start_symbol].add('$')
-
-    # Step 3: Iterate until no further changes occur
+    # Writing Header for Parsing Steps:
+    print("{:>70} {:>10} {:>20}\n".format("Input\t\t\t\t\tt\t\t\t\t\t", "Stack\t\t", "Action"))
+    print()
     while True:
-        prev_follow = {nonterm: follows[nonterm].copy() for nonterm in nonterm_userdef}
+        # Checking for Valid End Condition:
+        if stack == ['$'] and buffer == ['$']:
+            print("{:>100} | {:>25} | {:>30}\n".format(' '.join(buffer), ' '.join(stack), "Valid"))
+            return "Valid String!"
 
-        # Step 4: Iterate over each grammar rule
-        for lhs, rulees in grammar.items():
-            for rhs in rulees:
-                for i, symbol in enumerate(rhs):
-                    # Step 5: Update FOLLOW sets
-                    if symbol in nonterm_userdef:
-                        next_symbols = rhs[i+1:]
-                        next_symbols_first = compute_first_set(next_symbols, firsts, term_userdef)
+        # Parsing Non-terminals:
+        elif stack[0] not in term_userdef:
+            x = list(diction.keys()).index(stack[0])
+            y = table_term_list.index(buffer[-1])
+            if parsing_table[x][y] != '':
+                entry = parsing_table[x][y]
+                print("{:>100} | {:>25} | {:>30}\n".format(' '.join(buffer), ' '.join(stack),
+                                                           f"T[{stack[0]}][{buffer[-1]}]={entry}"))
+                lhs_rhs = entry.split("->")
+                lhs_rhs[1] = lhs_rhs[1].replace('#', '').strip()
+                entryrhs = lhs_rhs[1].split()
+                stack = entryrhs + stack[1:]
+            else:
+                return f" Invalid String! No rule at " \
+                       f"Table[{stack[0]}][{buffer[-1]}]."
 
-                        # Add FIRST set of next symbols to current non-terminal's FOLLOW set
-                        follows[symbol].update(next_symbols_first)
-                        # If next symbols can derive epsilon, add FOLLOW(lhs) to FOLLOW(symbol)
-                        if '#' in next_symbols_first:
-                            follows[symbol].update(follows[lhs])
-                            # If epsilon is followed by other symbols, add their FIRST sets to FOLLOW(symbol)
-                            for j in range(i+1, len(rhs)):
-                                if rhs[j] in term_userdef:
-                                    follows[symbol].add(rhs[j])
+        # Matching Terminals:
+        else:
+            if stack[0] == buffer[-1]:
+                print(
+                    "{:>100} | {:>25} | {:>30}\n".format(' '.join(buffer), ' '.join(stack), f"Matched1:{stack[0]}"))
+                buffer = buffer[:-1]
+                stack = stack[1:]
+            else:
+                return "Invalid String! Unmatched terminal symbols\n"
 
-
-        # Step 6: Check for convergence
-        if prev_follow == follows:
-            break
-
-    return follows
 
 # Test the lexer
 code = """
@@ -596,48 +478,6 @@ rules = [
     "REAL_DIG -> -3.65E-8 | 4.567 ",
 ]
 
-rules3 = [
-    "S -> BEGIN statement_list END",
-    "statement_List -> statement st_li",
-    "st_li -> statement st_li",
-    "st_li -> #",
-    "statement -> declaration",
-    "statement -> assignment",
-    "statement -> PRINT LIT",
-    "statement -> loop",
-    "declaration -> type ID_List",
-    "type -> INTEGER",
-    "type -> REAL",
-    "type -> STRING",
-    "ID_List -> ID idli",
-    "idli -> , ID idli",
-    "idli -> #",
-    "assignment -> ID := expression",
-    "expression -> ID",
-    "expression -> NUM",
-    "expression -> REAL_DIG",
-    "expression -> LIT",
-    "loop -> FOR ID := NUM TO NUM statement",
-    "ID -> A",
-    "ID -> B",
-    "ID -> C",
-    "ID -> D",
-    "ID -> E",
-    "ID -> X",
-    "ID -> Y",
-    "ID -> I",
-    "LIT -> HELLO",
-    "LIT -> text1",
-    "LIT -> hello there",
-    "LIT -> Strings are [X] and [Y]",
-    "NUM -> 2",
-    "NUM -> 4",
-    "NUM -> 6",
-    "NUM -> 1",
-    "NUM -> 5",
-    "REAL_DIG -> -3.65E-8",
-    "REAL_DIG -> 4.567"
-]
 
 print(token_dict)
 nonterm_userdef = ['S', 'statement_list', 'statement', 'declaration', 'type', 'ID_List', 'assignment', 'expression',
@@ -646,26 +486,6 @@ term_userdef = ['BEGIN', 'END', 'PRINT', '2', '4', '6', '1', '5', '-3.65E-8', '4
                 'D', 'E', 'X', 'Y', 'I', 'HELLO', 'text1', 'hello there', 'Strings are [X] and [Y]', "#", "INTEGER",
                 "REAL", "STRING", ","]
 
-# # List of terminals in our grammar
-# term_userdef = [token_dict['BEGIN'][0],token_dict['END'][0],token_dict['PRINT'][0],token_dict['INTEGER'][0],token_dict['REAL'][0],token_dict['STRING'][0],token_dict['EQUAL'][0],token_dict['FOR'][0],token_dict['TO'][0],',',token_dict['IDENTIFIER'][0],token_dict['IDENTIFIER'][1],token_dict['IDENTIFIER'][2],token_dict['IDENTIFIER'][3],token_dict['IDENTIFIER'][4],token_dict['IDENTIFIER'][5],token_dict['IDENTIFIER'][6],token_dict['IDENTIFIER'][7],token_dict['STRING_VALUE'][0],token_dict['STRING_VALUE'][1],token_dict['STRING_VALUE'][2],token_dict['STRING_VALUE'][3],token_dict['INTEGER_VALUE'][0],token_dict['INTEGER_VALUE'][1],token_dict['INTEGER_VALUE'][2],token_dict['INTEGER_VALUE'][3],token_dict['INTEGER_VALUE'][4],token_dict['REAL_VALUE'][0],token_dict['REAL_VALUE'][1]]
-
-grammar = {
-    'S': [['BEGIN', 'statement_list', 'END']],
-    'statement_list': [['statement', 'st_li']],
-    'st_li': [['statement', 'st_li'], ['#']],
-    'statement': [['declaration'], ['assignment'], ['PRINT', 'LIT'], ['loop']],
-    'declaration': [['type', 'ID_List']],
-    'type': [['INTEGER'], ['REAL'], ['STRING']],
-    'ID_List': [['ID', 'idli']],
-    'idli': [[',', 'ID', 'idli'], ['#']],
-    'assignment': [['ID', ':=', 'expression']],
-    'expression': [['ID'], ['NUM'], ['REAL_DIG'], ['LIT']],
-    'loop': [['FOR', 'ID', ':=', 'NUM', 'TO', 'NUM', 'statement']],
-    'ID': [['A'], ['B'], ['C'], ['D'], ['E'], ['X'], ['Y'], ['I']],
-    'LIT': [['HELLO'], ['text1'], ['hello', 'there'], ['Strings', 'are', '[X]', 'and', '[Y]']],
-    'NUM': [['2'], ['4'], ['6'], ['1'], ['5']],
-    'REAL_DIG': [['-3.65E-8'], ['4.567']]
-}
 
 diction = {}
 firsts = {}
@@ -687,35 +507,11 @@ print("dictionary: ", diction)
 start_symbol = 'S'
 # computeAllFollows()
 # print(grammar == diction)
-follows = compute_follow()
+computeAllFollows()
 print("\n \n")
 print("================================================================================================")
 # print(grammar)
 # grammar = diction
-def print_grammar(grammar):
-    for non_terminal, productions in grammar.items():
-        print(f"{non_terminal} -> ", end="")
-        for production in productions:
-            print(production, end=" | ")
-        print("\n")
-
-def print_diction(grammar):
-    for non_terminal, productions in grammar.items():
-        print(f"{non_terminal} -> ", end="")
-        for production in productions:
-            print(production, end=" | ")
-        print("\n")
-
-print_grammar(grammar)
-print("================================================================================================")
-print_diction(diction)
-
-
-
 print("\n \n")
-# Output the computed FOLLOW sets
-for non_terminal, follow_set in follows.items():
-    print(f'FOLLOW({non_terminal}): {follow_set}')
-# (parsing_table, result, tabTerm) = createParseTable()
+(parsing_table, result, tabTerm) = createParseTable()
 
-# if code != None:
