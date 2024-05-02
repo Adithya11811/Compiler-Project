@@ -363,63 +363,120 @@ def follow(nT, visited):
                         follow_ |= follow(nt, visited)
     return follow_
 
+# def validateStringUsingStackBuffer(parsing_table, grammarll1,
+#                                    table_term_list, input_string,
+#                                    term_userdef, start_symbol):
+#     print(f"Validate String:\n\n{input_string}\n")
+#     print("Look into the parsing.txt file for the parsing steps")
+#     print("\n")
+#     if grammarll1 == False:
+#         return f"Input String = \"{input_string}\"\nGrammar is not LL(1)\n"
+#     stack = [start_symbol, '$']
+#     buffer = []
+#     input_string = input_string.split()
+#     input_string.reverse()
+#     buffer = ['$'] + input_string
+
+#     # Writing Header for Parsing Steps:
+#     print("{:>70} {:>10} {:>20}\n".format("Input\t\t\t\t\tt\t\t\t\t\t", "Stack\t\t", "Action"))
+#     print()
+#     while True:
+#         # Checking for Valid End Condition:
+#         if stack == ['$'] and buffer == ['$']:
+#             print("{:>100} | {:>25} | {:>30}\n".format(' '.join(buffer), ' '.join(stack), "Valid"))
+#             return "Valid String!"
+
+#         # Parsing Non-terminals:
+#         elif stack[0] not in term_userdef:
+#             x = list(diction.keys()).index(stack[0])
+#             y = table_term_list.index(buffer[-1])
+#             print("x: ", x)
+#             if parsing_table[x][y] != '':
+#                 entry = parsing_table[x][y]
+#                 print("{:>100} | {:>25} | {:>30}\n".format(' '.join(buffer), ' '.join(stack),
+#                                                            f"T[{stack[0]}][{buffer[-1]}]={entry}"))
+#                 lhs_rhs = entry.split("->")
+#                 lhs_rhs[1] = lhs_rhs[1].replace('#', '').strip()
+#                 entryrhs = lhs_rhs[1].split()
+#                 stack = entryrhs + stack[1:]
+#             else:
+#                 return f" Invalid String! No rule at " \
+#                        f"Table[{stack[0]}][{buffer[-1]}]."
+
+#         # Matching Terminals:
+#         else:
+#             if stack[0] == buffer[-1]:
+#                 print(
+#                     "{:>100} | {:>25} | {:>30}\n".format(' '.join(buffer), ' '.join(stack), f"Matched1:{stack[0]}"))
+#                 buffer = buffer[:-1]
+#                 stack = stack[1:]
+#             else:
+#                 return "Invalid String! Unmatched terminal symbols\n"
+
+
+
 def validateStringUsingStackBuffer(parsing_table, grammarll1,
                                    table_term_list, input_string,
                                    term_userdef, start_symbol):
     print(f"Validate String:\n\n{input_string}\n")
     print("Look into the parsing.txt file for the parsing steps")
     print("\n")
-    if grammarll1 == False:
+    if not grammarll1:
         return f"Input String = \"{input_string}\"\nGrammar is not LL(1)\n"
+
     stack = [start_symbol, '$']
-    buffer = []
     input_string = input_string.split()
     input_string.reverse()
-    buffer = ['$'] + input_string
+    buffer = ['$']+ input_string
 
     # Writing Header for Parsing Steps:
     print("{:>70} {:>10} {:>20}\n".format("Input\t\t\t\t\tt\t\t\t\t\t", "Stack\t\t", "Action"))
     print()
+
     while True:
         # Checking for Valid End Condition:
         if stack == ['$'] and buffer == ['$']:
             print("{:>100} | {:>25} | {:>30}\n".format(' '.join(buffer), ' '.join(stack), "Valid"))
             return "Valid String!"
 
+        
         # Parsing Non-terminals:
         elif stack[0] not in term_userdef:
-            x = list(diction.keys()).index(stack[0])
-            y = table_term_list.index(buffer[-1])
-            if parsing_table[x][y] != '':
-                entry = parsing_table[x][y]
-                print("{:>100} | {:>25} | {:>30}\n".format(' '.join(buffer), ' '.join(stack),
-                                                           f"T[{stack[0]}][{buffer[-1]}]={entry}"))
-                lhs_rhs = entry.split("->")
-                lhs_rhs[1] = lhs_rhs[1].replace('#', '').strip()
-                entryrhs = lhs_rhs[1].split()
-                stack = entryrhs + stack[1:]
+            non_terminal = stack[0]
+            terminal = buffer[-1]
+            if non_terminal in parsing_table and terminal in table_term_list:
+                entry = parsing_table[non_terminal][terminal]
+                if entry:
+                    print("{:>100} | {:>25} | {:>30}\n".format(' '.join(buffer), ' '.join(stack),
+                                                               f"T[{non_terminal}][{terminal}]={entry}"))
+                    lhs_rhs = entry.split(" -> ")
+                    rhs = lhs_rhs[1].replace('#', '').strip().split()
+                    stack = rhs + stack[1:]
+                else:
+                    return f"Invalid String! No rule at Table[{non_terminal}][{terminal}]."
             else:
-                return f" Invalid String! No rule at " \
-                       f"Table[{stack[0]}][{buffer[-1]}]."
-
+                print("buffer: ",buffer)
+                return f"Invalid String! Non-terminal '{non_terminal}' or terminal '{terminal}' not found in parsing table."
+                
         # Matching Terminals:
         else:
             if stack[0] == buffer[-1]:
-                print(
-                    "{:>100} | {:>25} | {:>30}\n".format(' '.join(buffer), ' '.join(stack), f"Matched1:{stack[0]}"))
-                buffer = buffer[:-1]
-                stack = stack[1:]
+                print("{:>100} | {:>25} | {:>30}\n".format(' '.join(buffer), ' '.join(stack),
+                                                           f"Matched: {stack[0]}"))
+                buffer.pop()
+                stack.pop(0)
             else:
                 return "Invalid String! Unmatched terminal symbols\n"
+
 
 
 # Test the lexer
 code = """
 BEGIN 
 PRINT "HELLO" 
-INTEGER A, B, C 
-REAL D, E 
-STRING X, Y 
+INTEGER A , B , C 
+REAL D , E 
+STRING X , Y 
 A := 2 
 B := 5
 C := 6 
@@ -427,7 +484,7 @@ D := -3.65E-8
 E := 4.567 
 X := "text1" 
 Y := "hello_there" 
-FOR I:=1 TO 5 
+FOR I := 1 TO 5 
 PRINT "Strings_are_[X]_and_[Y]" 
 END 
 """
@@ -484,7 +541,7 @@ rules = [
     "expression ->  ID | NUM | REAL_DIG | LIT",
     "loop -> FOR ID := NUM TO  NUM  statement",
     "ID -> A | B | C  | D | E | X | Y | I ",
-    "LIT -> HELLO | text1 |  hello_there | Strings_are_[X]_and_[Y] ",
+    'LIT -> "HELLO" | "text1" |  "hello_there" | "Strings_are_[X]_and_[Y]" ',
     "NUM -> 2 | 4 | 6 | 1 | 5 ",
     "REAL_DIG -> -3.65E-8 | 4.567 ",
 ]
@@ -494,7 +551,7 @@ print(token_dict)
 nonterm_userdef = ['S', 'statement_list', 'statement', 'declaration', 'type', 'ID_List', 'assignment', 'expression',
                    'loop', 'ID', 'LIT', 'NUM', 'REAL_DIG', 'st_li', 'idli']
 term_userdef = ['BEGIN', 'END', 'PRINT', '2', '4', '6', '1', '5', '-3.65E-8', '4.567', ':=', 'FOR', 'TO', 'A', 'B', 'C',
-                'D', 'E', 'X', 'Y', 'I', 'HELLO', 'text1', 'hello_there', 'Strings_are_[X]_and_[Y]', "#", "INTEGER",
+                'D', 'E', 'X', 'Y', 'I', '"HELLO"', '"text1"', '"hello_there"', '"Strings_are_[X]_and_[Y]"', "#", "INTEGER",
                 "REAL", "STRING", ","]
 
 
@@ -527,4 +584,10 @@ print("\n \n")
 (parsing_table, result, tabTerm) = createParseTable()
 
 
-
+if code != None:
+    validity = validateStringUsingStackBuffer(parsing_table,result,
+                             tabTerm,code,
+                             term_userdef,start_symbol)
+    print(validity)
+else:
+    print("No input String detected")
