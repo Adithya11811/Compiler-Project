@@ -583,7 +583,7 @@ rules = [
     "statement_list -> statement st_li",
     "st_li -> statement st_li | # ",
     "statement -> declaration | assignment | PRINT LIT | loop",
-    "declaration -> type ID_list",
+    "declaration -> type ID_List",
     "type -> INTEGER | REAL | STRING",
     "ID_List -> ID idli",
     "idli -> , ID idli | #",
